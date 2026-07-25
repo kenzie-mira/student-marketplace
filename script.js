@@ -14,20 +14,25 @@ const allProducts = [
     { id: 12, name: "Backpack", price: 15000, category: "Others", rating: 4.6, reviews: 29, seller: "Alice", status: "Available", img: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&q=80" }
 ];
 
+let cart = [];
 const itemsPerPage = 8;
 let currentPage = 1;
 
 const formatNaira = (amount) => '₦' + amount.toLocaleString();
 
-function renderProducts() {
+// 2. Main UI Rendering (Products, Pagination, Stats)
+function displayProducts(productsToShow) {
     const grid = document.getElementById('productGrid');
     grid.innerHTML = '';
 
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedItems = allProducts.slice(startIndex, startIndex + itemsPerPage);
+    const paginatedItems = productsToShow.slice(startIndex, startIndex + itemsPerPage);
 
-    paginatedItems.forEach(product => {
-        const badgeClass = product.status === 'Available' ? 'status-available' : 'status-soldout';
+    const cards = paginatedItems.map(product => {
+        const isAvailable = product.status === 'Available';
+        const badgeClass = isAvailable ? 'status-available' : 'status-soldout';
+        const btnText = isAvailable ? '<span class="material-symbols-rounded" style="font-size:1.1rem;">add_shopping_cart</span> Add to Cart' : 'Sold Out';
+
         const card = `
                     <div class="product-card">
                         <span class="status-badge ${badgeClass}">${product.status}</span>
@@ -46,12 +51,17 @@ function renderProducts() {
                                 <span class="material-symbols-rounded" style="font-size:1rem;">person</span> ${product.seller}
                             </div>
                         </div>
+                        <button class="btn-add-to-cart" onclick="addToCart(${product.id})" ${!isAvailable ? 'disabled' : ''}>
+                            ${btnText}
+                        </button>
                     </div>
                 `;
-        grid.innerHTML += card;
+        return card;
     });
+    grid.innerHTML = cards.join("");
 
-    document.getElementById('totalItemsBadge').innerText = `${allProducts.length} items`;
+    const totalItemsBadge = document.getElementById('totalItemsBadge');
+    totalItemsBadge.innerText = `${allProducts.length} items`;
 }
 
 function renderPagination() {
@@ -84,50 +94,207 @@ function renderPagination() {
 
 function renderStatistics() {
     const prices = allProducts.map(p => p.price);
-    const totalProducts = allProducts.length;
     const highestPrice = Math.max(...prices);
     const cheapestPrice = Math.min(...prices);
-    const averagePrice = Math.round(prices.reduce((a, b) => a + b, 0) / totalProducts);
+    const averagePrice = Math.round(prices.reduce((a, b) => a + b, 0) / allProducts.length);
     const availableCount = allProducts.filter(p => p.status === 'Available').length;
     const soldOutCount = allProducts.filter(p => p.status === 'Sold Out').length;
 
-    const statsHtml = `
-                <div class="stat-card bg-purple">
-                    <div class="stat-value">${totalProducts}</div>
-                    <div class="stat-label">Total Products</div>
-                </div>
-                <div class="stat-card bg-green">
-                    <div class="stat-value">${formatNaira(highestPrice)}</div>
-                    <div class="stat-label">Highest Price</div>
-                </div>
-                <div class="stat-card bg-blue">
-                    <div class="stat-value">${formatNaira(cheapestPrice)}</div>
-                    <div class="stat-label">Cheapest Price</div>
-                </div>
-                <div class="stat-card bg-orange">
-                    <div class="stat-value">${formatNaira(averagePrice)}</div>
-                    <div class="stat-label">Average Price</div>
-                </div>
-                <div class="stat-card bg-green">
-                    <div class="stat-value">${availableCount}</div>
-                    <div class="stat-label">Available</div>
-                </div>
-                <div class="stat-card bg-red">
-                    <div class="stat-value">${soldOutCount}</div>
-                    <div class="stat-label">Out of Stock</div>
-                </div>
+    document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card bg-purple"><div class="stat-value">${allProducts.length}</div><div class="stat-label">Total Products</div></div>
+                <div class="stat-card bg-green"><div class="stat-value">${formatNaira(highestPrice)}</div><div class="stat-label">Highest Price</div></div>
+                <div class="stat-card bg-blue"><div class="stat-value">${formatNaira(cheapestPrice)}</div><div class="stat-label">Cheapest Price</div></div>
+                <div class="stat-card bg-orange"><div class="stat-value">${formatNaira(averagePrice)}</div><div class="stat-label">Average Price</div></div>
+                <div class="stat-card bg-green"><div class="stat-value">${availableCount}</div><div class="stat-label">Available</div></div>
+                <div class="stat-card bg-red"><div class="stat-value">${soldOutCount}</div><div class="stat-label">Out of Stock</div></div>
             `;
-
-    document.getElementById('statsGrid').innerHTML = statsHtml;
     document.getElementById('quickFilterAvailable').innerText = availableCount;
 }
+
+const grid = document.getElementById("productGrid");
+const searchInput = document.getElementById("search-input")
+searchInput.addEventListener("input", () => {
+    const searchValue = searchInput.value;
+    const cleanedInput = searchValue.trim().toLowerCase()
+    const filteredProducts = allProducts.filter((product) => {
+        return (
+            product.name.toLowerCase().includes(cleanedInput) ||
+            product.category.toLowerCase().includes(cleanedInput) ||
+            product.seller.toLowerCase().includes(cleanedInput)
+        );
+    })
+    if (cleanedInput === "") {
+        displayProducts(allProducts);
+    } else if (!Number.isNaN(Number(cleanedInput))) {
+        displayProducts(allProducts);
+        return;
+    } else if (filteredProducts.length === 0) {
+        grid.innerHTML =
+            "<p style='text-align:center; padding:20px;'>No product found 😔</p>";
+    } else {
+        displayProducts(filteredProducts);
+    }
+
+})
+
+const searchInput2 = document.getElementById("search-input-2")
+const categorySelect = document.getElementById("select1")
+const availabilitySelect = document.getElementById("select2")
+const clearButton = document.querySelector(".icon-btn")
+
+function filterProducts() {
+    const searchedtext = searchInput2.value
+    const cleanedText = searchedtext.trim().toLowerCase()
+    const categoryValue = categorySelect.value
+    const cleanedCategory = categoryValue.trim().toLowerCase()
+    const availabilityValue = availabilitySelect.value
+    const cleanedAvailability = availabilityValue.trim().toLowerCase()
+
+    const filteredProductsAndCategories = allProducts.filter((product) => {
+        const nameMatches = product.name.toLowerCase().includes(cleanedText)
+        const categoryMatches = product.category.toLowerCase() === cleanedCategory || cleanedCategory === "all categories"
+        const availabilityMatches = product.status.toLowerCase().includes(cleanedAvailability) || cleanedAvailability.includes("all availability")
+        return (
+            nameMatches &&
+            categoryMatches &&
+            availabilityMatches
+        );
+    })
+
+    // Display products
+    if (cleanedText === "" && cleanedCategory.includes("all categories") && cleanedAvailability.includes("all availability")) {
+        displayProducts(allProducts)
+    } else if (filteredProductsAndCategories.length === 0) {
+        grid.innerHTML = "<p style='text-align: center; padding:20px;'>No products found 😔</p>";
+    } else {
+        displayProducts(filteredProductsAndCategories);
+    }
+}
+
+searchInput2.addEventListener("input", filterProducts);
+
+categorySelect.addEventListener("change", filterProducts);
+
+availabilitySelect.addEventListener("change", filterProducts);
+
+const findIdButton = document.querySelector(".btn-primary")
+findIdButton.addEventListener("click", () => {
+    const searchValue = searchInput.value;
+    const cleanedInput = searchValue.trim()
+    const num = Number(cleanedInput)
+    const foundProducts = allProducts.find((product) => {
+        return product.id === num
+    })
+    if (cleanedInput === "" || Number.isNaN(num)) {
+        displayProducts(allProducts)
+    } else if (!foundProducts) {
+        grid.innerHTML = "<p style='text-align: center; padding:20px;'>No product with that ID found 😔</p>";
+    } else {
+        displayProducts([foundProducts])
+    }
+
+})
+
+function renderCart() {
+    const container = document.getElementById('cartItemsContainer');
+    container.innerHTML = '';
+
+    let totalItems = 0;
+    let subtotal = 0;
+
+    if (cart.length === 0) {
+        container.innerHTML = `
+                    <div style="text-align:center; color:var(--text-muted); margin-top:3rem;">
+                        <span class="material-symbols-rounded" style="font-size:3rem; margin-bottom:1rem; opacity:0.5;">shopping_basket</span>
+                        <p>Your cart is empty.</p>
+                    </div>`;
+    }
+
+    cart.forEach(cartItem => {
+        const product = allProducts.find(p => p.id === cartItem.id);
+        if (product) {
+            totalItems += cartItem.quantity;
+            subtotal += (product.price * cartItem.quantity);
+
+            container.innerHTML += `
+                        <div class="cart-item">
+                            <div class="cart-item-img"><img src="${product.img}" alt="${product.name}"></div>
+                            <div class="cart-item-info">
+                                <div style="display:flex; justify-content:space-between; align-items:start;">
+                                    <h4 class="cart-item-title">${product.name}</h4>
+                                    <button class="btn-remove" onclick="removeFromCart(${cartItem.id})"><span class="material-symbols-rounded" style="font-size:1.2rem;">delete</span></button>
+                                </div>
+                                <div class="cart-item-price">${formatNaira(product.price)}</div>
+                                <div class="qty-controls">
+                                    <button class="qty-btn" onclick="updateQuantity(${cartItem.id}, -1)"><span class="material-symbols-rounded" style="font-size:1rem;">remove</span></button>
+                                    <span class="qty-value">${cartItem.quantity}</span>
+                                    <button class="qty-btn" onclick="updateQuantity(${cartItem.id}, 1)"><span class="material-symbols-rounded" style="font-size:1rem;">add</span></button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+        }
+    });
+
+    document.getElementById('cartHeaderTitle').innerText = `Your Cart (${totalItems})`;
+    document.getElementById('navCartBadge').innerText = totalItems;
+    document.getElementById('subtotalText').innerText = `Subtotal (${totalItems} items)`;
+    document.getElementById('subtotalAmount').innerText = formatNaira(subtotal);
+    document.getElementById('navCartBadge').style.display = totalItems > 0 ? 'flex' : 'none';
+}
+
+window.addToCart = function (productId) {
+    const existing = cart.find(item => item.id === productId);
+    if (existing) existing.quantity += 1;
+    else cart.push({ id: productId, quantity: 1 });
+    renderCart();
+    toggleCart(true); // Open drawer for feedback
+}
+
+window.updateQuantity = function (productId, delta) {
+    const item = cart.find(item => item.id === productId);
+    if (item) {
+        item.quantity += delta;
+        if (item.quantity <= 0) removeFromCart(productId);
+        else renderCart();
+    }
+}
+
+window.removeFromCart = function (productId) {
+    cart = cart.filter(item => item.id !== productId);
+    renderCart();
+}
+
+// 4. UI Interactions (Drawers & Theme)
+const cartDrawer = document.getElementById('cartDrawer');
+const cartOverlay = document.getElementById('cartOverlay');
+const sidebar = document.getElementById('sidebar');
+
+function toggleCart(show) {
+    if (show) {
+        cartDrawer.classList.add('open');
+        cartOverlay.classList.add('show');
+        if (window.innerWidth <= 768) sidebar.classList.remove('open');
+    } else {
+        cartDrawer.classList.remove('open');
+        cartOverlay.classList.remove('show');
+    }
+}
+
+document.getElementById('openCartBtn').addEventListener('click', () => toggleCart(true));
+document.getElementById('closeCartBtn').addEventListener('click', () => toggleCart(false));
+cartOverlay.addEventListener('click', () => toggleCart(false));
+
+document.getElementById('menuToggle').addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    toggleCart(false);
+});
 
 const themeToggleBtn = document.getElementById('themeToggle');
 const themeIcon = document.getElementById('themeIcon');
 
 themeToggleBtn.addEventListener('click', () => {
-    const isDark = document.body.getAttribute('data-theme') === 'dark';
-    if (isDark) {
+    if (document.body.getAttribute('data-theme') === 'dark') {
         document.body.removeAttribute('data-theme');
         themeIcon.innerText = 'dark_mode';
     } else {
@@ -136,17 +303,12 @@ themeToggleBtn.addEventListener('click', () => {
     }
 });
 
-const menuToggle = document.getElementById('menuToggle');
-const sidebar = document.getElementById('sidebar');
-
-menuToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('open');
-});
-
 function updateUI() {
-    renderProducts();
+    displayProducts(allProducts);
     renderPagination();
 }
 
+// Initialize App
 updateUI();
 renderStatistics();
+renderCart(); // Initialize empty cart UI

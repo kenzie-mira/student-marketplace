@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campus Marketplace - Premium</title>
+    <title>Campus Marketplace - Premium with Cart</title>
     <!-- Google Material Symbols Rounded -->
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
@@ -14,7 +14,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body>
@@ -27,26 +26,28 @@
             </button>
             <div class="logo">
                 <span class="material-symbols-rounded">storefront</span>
-                <div class="logo-text">
+                <div class="logo-text" style="font-size: 1.1rem;">
                     Campus Marketplace
-                    <small>Buy. Sell. Connect.</small>
+                    <!-- Tagline hidden on mobile to save space -->
+                    <small class="hide-on-mobile">Buy. Sell. Connect.</small>
                 </div>
             </div>
             <div class="search-bar">
                 <span class="material-symbols-rounded" style="color: var(--text-muted);">search</span>
-                <input type="text" placeholder="Search for products...">
+                <input type="text" placeholder="Search for products..." id="search-input">
             </div>
         </div>
         <div class="nav-right">
-            <button class="btn-primary">
+            <!-- Find ID completely hidden on mobile to give space to the Cart icon -->
+            <button class="btn-primary hide-on-mobile">
                 <span class="material-symbols-rounded">qr_code_scanner</span> Find by ID
-            </button>
-            <button class="icon-btn">
-                <span class="material-symbols-rounded">shopping_cart</span>
-                <span class="badge">3</span>
             </button>
             <button class="icon-btn" id="themeToggle">
                 <span class="material-symbols-rounded" id="themeIcon">dark_mode</span>
+            </button>
+            <button class="icon-btn" id="openCartBtn" style="border-color: var(--primary); color: var(--primary);">
+                <span class="material-symbols-rounded">shopping_cart</span>
+                <span class="badge" id="navCartBadge">0</span>
             </button>
         </div>
     </nav>
@@ -68,8 +69,8 @@
                     style="color: #c026d3; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 800;">
                     <span class="material-symbols-rounded">bolt</span> Flash Sale!
                 </h4>
-                <p style="font-size: 0.85rem; color: #475569; margin-bottom: 1rem; font-weight: 500;">Any product less
-                    than ₦5,000?</p>
+                <p style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 1rem; font-weight: 500;">Any
+                    product less than ₦5,000?</p>
                 <strong style="color: #16a34a; font-size: 1.1rem;">Yes!</strong>
                 <div
                     style="margin-top: 1.2rem; color: #9333ea; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; transition: var(--transition);">
@@ -93,10 +94,10 @@
                 <div class="filters">
                     <div class="filter-input" style="flex: 2;">
                         <span class="material-symbols-rounded" style="color: var(--text-muted);">search</span>
-                        <input type="text" placeholder="Search by product name...">
+                        <input type="text" placeholder="Search by product name..." id="search-input-2">
                     </div>
                     <div class="filter-input">
-                        <select>
+                        <select id="select1">
                             <option>All Categories</option>
                             <option>Electronics</option>
                             <option>Books</option>
@@ -104,7 +105,7 @@
                         </select>
                     </div>
                     <div class="filter-input">
-                        <select>
+                        <select id="select2">
                             <option>All Availability</option>
                             <option>Available</option>
                             <option>Sold Out</option>
@@ -153,7 +154,36 @@
             </aside>
         </div>
     </div>
-<script src="script.js"></script>
+
+    <!-- Cart Overlay & Drawer System -->
+    <div class="cart-overlay" id="cartOverlay"></div>
+    <aside class="cart-drawer" id="cartDrawer">
+        <div class="cart-header">
+            <h2 id="cartHeaderTitle">Your Cart (0)</h2>
+            <button class="close-cart" id="closeCartBtn">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        </div>
+
+        <div class="cart-items-container" id="cartItemsContainer">
+            <!-- Cart Items Injected via JS -->
+        </div>
+
+        <div class="cart-footer">
+            <div class="cart-subtotal">
+                <span id="subtotalText">Subtotal (0 items)</span>
+                <span id="subtotalAmount">₦0</span>
+            </div>
+            <button class="btn-checkout">
+                <span class="material-symbols-rounded">lock</span> Checkout Securely
+            </button>
+            <div class="promo-banner">
+                <span class="material-symbols-rounded" style="font-size:1.2rem;">local_shipping</span>
+                Free delivery on orders above ₦100,000
+            </div>
+        </div>
+    </aside>
+    <script src="script.js"></script>
 </body>
 
 </html>
